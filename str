@@ -1,0 +1,128 @@
+import streamlit as st
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferWindowMemory
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+groq_api_key = os.getenv("GROQ_API_KEY")
+
+# Define the list of questions
+symptom_questions = [
+    "Do you have a high fever (e.g., above 100°F or 37.8°C)?",
+    "Are you experiencing chills or sweating?",
+    "Do you feel weak or fatigued?",
+    "Are you experiencing muscle or joint pain?",
+    "Do you have a sore throat or cough?",
+    "Do you have headaches or dizziness?",
+    "Have you noticed any skin rashes?",
+    "Are you experiencing abdominal pain or diarrhea?",
+    "Do you have nausea or vomiting?",
+    "Have you recently traveled to areas with a high risk of infections (e.g., malaria, dengue)?",
+]
+
+def main():
+    st.title("Symptom Checker - Fever Analysis Bot")
+
+    # Sidebar for model selection
+    st.sidebar.title("Select a Model")
+    model = st.sidebar.selectbox(
+        "Choose an LLM",
+        ["mixtral-8x7b-32768", "llama2-70b-4096"]
+    )
+
+    # Conversation memory
+    memory = ConversationBufferWindowMemory(k=10)
+
+    # Initialize LangChain Groq model
+    groq_chat = ChatGroq(
+        groq_api_key=groq_api_key,
+        model_name=model
+    )
+    conversation = ConversationChain(
+        llm=groq_chat,
+        memory=memory
+    )
+
+    # Initialize session state for tracking
+    if "current_question_index" not in st.session_state:
+        st.session_state.current_question_index = 0
+    if "responses" not in st.session_state:
+        st.session_state.responses = []
+    if "diagnosis_complete" not in st.session_state:
+        st.session_state.diagnosis_complete = False
+
+    # Chat History
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # Display previous chat history
+    for chat in st.session_state.chat_history:
+        with st.chat_message(chat["role"]):
+            st.write(chat["message"])
+
+    # Diagnosis complete
+    if st.session_state.diagnosis_complete:
+        st.write("Diagnosis complete. Restart the bot for a new analysis.")
+        return
+
+    # Input for user response
+    user_input = st.chat_input("Type your answer here...")
+    if user_input:
+        # Save the user's response
+        st.session_state.responses.append(user_input)
+
+        # Add the user response to the chat history
+        with st.chat_message("user"):
+            st.write(user_input)
+        st.session_state.chat_history.append({
+            "role": "user",
+            "message": user_input
+        })
+
+        # Move to the next question
+        st.session_state.current_question_index += 1
+        st.session_state.asked_question = False
+
+        # If all questions are answered, analyze the responses
+        if st.session_state.current_question_index == len(symptom_questions):
+            summary = "\n".join(
+                [f"Q: {q} A: {a}" for q, a in zip(symptom_questions, st.session_state.responses)]
+            )
+            analysis_prompt = f"Based on the following symptoms, what kind of fever could this person have? Provide a diagnosis and include up to two possibilities:\n{summary}"
+            diagnosis = conversation(analysis_prompt)["response"]
+
+            # Show the diagnosis
+            with st.chat_message("assistant"):
+                st.write("Based on your symptoms, here is the analysis:")
+                st.write(diagnosis)
+
+            # Add the diagnosis to the chat history
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "message": f"Based on your symptoms, here is the analysis: {diagnosis}"
+            })
+
+            # Mark the diagnosis as complete
+            st.session_state.diagnosis_complete = True
+    # Handle the current question
+    if st.session_state.current_question_index < len(symptom_questions):
+        current_question = symptom_questions[st.session_state.current_question_index]
+
+        # Show the question if it hasn't been asked yet
+        if "asked_question" not in st.session_state or not st.session_state.asked_question:
+            with st.chat_message("assistant"):
+                st.write(current_question)
+
+            # Add the question to the chat history
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "message": current_question
+            })
+            st.session_state.asked_question = True
+
+
+if __name__ == "__main__":
+    main()

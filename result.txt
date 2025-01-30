@@ -1,0 +1,11 @@
+Prediction Result: Atopic Dermatitis
+Question 1: Yes
+Question 2: Yes
+Question 3: No
+Question 4: No
+Question 5: Yes
+Question 6: No
+Question 7: Yes
+Question 8: No
+Question 9: No
+Question 10: Yes
