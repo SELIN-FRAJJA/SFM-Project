@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maternal Health Risk Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='mhstyle.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <h1>Maternal Health Risk Prediction</h1>
+
+    <div class="form-group">
+        <label for="age">Age (18-100)</label>
+        <input type="number" id="age" min="18" max="100" required />
+    </div>
+
+    <div class="form-group">
+        <label for="systolic_bp">Systolic BP (80-200)</label>
+        <input type="number" id="systolic_bp" min="80" max="200" required />
+    </div>
+
+    <div class="form-group">
+        <label for="diastolic">Diastolic BP (50-120)</label>
+        <input type="number" id="diastolic" min="50" max="120" required />
+    </div>
+
+    <div class="form-group">
+        <label for="bs">Blood Sugar (BS)</label>
+        <input type="number" id="bs" required />
+    </div>
+
+    <div class="form-group">
+        <label for="body_temp">Body Temperature (°C)</label>
+        <input type="number" id="body_temp" required />
+    </div>
+
+    <div class="form-group">
+        <label for="bmi">BMI (10-50)</label>
+        <input type="number" id="bmi" min="10" max="50" step="0.1" required />
+    </div>
+
+    <div class="form-group">
+        <label for="previous_complications">Previous Complications</label>
+        <select id="previous_complications" required>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="preexisting_diabetes">Preexisting Diabetes</label>
+        <select id="preexisting_diabetes" required>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="gestational_diabetes">Gestational Diabetes</label>
+        <select id="gestational_diabetes" required>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="mental_health">Mental Health Issues</label>
+        <select id="mental_health" required>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="heart_rate">Heart Rate (bpm)</label>
+        <input type="number" id="heart_rate" required />
+    </div>
+
+    <button class="btn" onclick="predictRisk()">Predict</button>
+
+    <div class="loading" id="loading" style="display:none;">Loading...</div>
+    <div class="result" id="result" style="display:none;"></div>
+    <div class="error" id="error" style="display:none;"></div>
+</div>
+
+<script>
+    function predictRisk() {
+        // Show loading message
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("result").style.display = "none";
+        document.getElementById("error").style.display = "none";
+
+        const formData = {
+            Age: parseInt(document.getElementById("age").value),
+            "Systolic BP": parseInt(document.getElementById("systolic_bp").value),
+            Diastolic: parseInt(document.getElementById("diastolic").value),
+            BS: parseInt(document.getElementById("bs").value),
+            "Body Temp": parseFloat(document.getElementById("body_temp").value),
+            BMI: parseFloat(document.getElementById("bmi").value),
+            "Previous Complications": document.getElementById("previous_complications").value === "Yes" ? 1 : 0,
+            "Preexisting Diabetes": document.getElementById("preexisting_diabetes").value === "Yes" ? 1 : 0,
+            "Gestational Diabetes": document.getElementById("gestational_diabetes").value === "Yes" ? 1 : 0,
+            "Mental Health": document.getElementById("mental_health").value === "Yes" ? 1 : 0,
+            "Heart Rate": parseInt(document.getElementById("heart_rate").value)
+        };
+
+        fetch("http://127.0.0.1:5003/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("loading").style.display = "none";
+
+            // Risk level explanations and recommendations
+            const riskDetails = {
+                "Low": {
+                    explanation: "Your risk level is low, indicating minimal health complications. This suggests that you are in good health, but regular check-ups are still recommended.",
+                    recommendations: [
+                        "Maintain a balanced diet rich in fruits, vegetables, and whole grains.",
+                        "Engage in light physical activity, such as walking or yoga, for 30 minutes daily.",
+                        "Continue monitoring your health parameters regularly."
+                    ]
+                },
+                "Moderate": {
+                    explanation: "Your risk level is moderate, indicating some health concerns. You may need to take preventive measures and consult with a healthcare provider.",
+                    recommendations: [
+                        "Schedule a consultation with your healthcare provider for detailed evaluation.",
+                        "Monitor your blood pressure and blood sugar levels closely.",
+                        "Adopt a healthier lifestyle, including regular exercise and a low-sodium diet."
+                    ]
+                },
+                "High": {
+                    explanation: "Your risk level is high, indicating significant health concerns that require immediate attention. Consult a healthcare provider without delay.",
+                    recommendations: [
+                        "Seek immediate medical advice from a specialist.",
+                        "Avoid stressful activities and get adequate rest.",
+                        "Follow a strict healthcare regimen, including prescribed medications, a tailored diet, and regular follow-ups."
+                    ]
+                }
+            };
+
+            if (data.prediction) {
+                const risk = data.prediction;
+                const details = riskDetails[risk];
+                const recommendationList = details.recommendations.map(rec => `<li>${rec}</li>`).join("");
+
+                document.getElementById("result").innerHTML = `
+                    <h2>Predicted Risk Level: ${risk}</h2>
+                    <p>${details.explanation}</p>
+                    <h3>Recommendations:</h3>
+                    <ul>${recommendationList}</ul>
+                `;
+                document.getElementById("result").style.display = "block";
+            } else {
+                document.getElementById("error").innerText = "Error: " + data.error;
+                document.getElementById("error").style.display = "block";
+            }
+        })
+        .catch(error => {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("error").innerText = "An error occurred: " + error;
+            document.getElementById("error").style.display = "block";
+        });
+    }
+</script>
+</body>
+</html>

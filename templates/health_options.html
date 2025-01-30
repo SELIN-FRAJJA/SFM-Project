@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Options</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>What bothers you?</h1>
+    <form method="POST">
+      <div class="button-group horizontal">
+        <button type="submit" name="option" value="Skin" class="option-button">Skin</button>
+        <button type="submit" name="option" value="Fever" class="option-button">Fever</button>
+        <button type="submit" name="option" value="Maternal Health" class="option-button">Maternal Health</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Black icon -->
+  <div id="icon" onclick="toggleMap()"></div>
+
+  <!-- Map section -->
+  <div id="map-section">
+    <div class="map-content">
+      <h1>Location</h1>
+      <p>Get your nearest hospitals</p>
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248755.79476647807!2d80.04386343413348!3d13.04780780729597!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5265ea4f7d3361%3A0x6e61a70b6863d433!2sChennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1738058631402!5m2!1sen!2sin" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+  </div>
+
+  <script>
+    // Function to toggle the map section visibility
+    function toggleMap() {
+      const mapSection = document.getElementById('map-section');
+      if (mapSection.style.display === 'none' || mapSection.style.display === '') {
+        mapSection.style.display = 'flex'; // Show the map section
+      } else {
+        mapSection.style.display = 'none'; // Hide the map section
+      }
+    }
+  </script>
+</body>
+</html>

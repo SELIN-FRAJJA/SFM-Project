@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome!</h1>
+    <form method="POST">
+      <label for="age">Enter your age:</label>
+      <input type="number" id="age" name="age" required>
+
+      <p>Select your sex:</p>
+      <div class="button-group">
+        <button type="button" id="female" class="sex-button" onclick="selectSex('Female')">Female</button>
+        <button type="button" id="male" class="sex-button" onclick="selectSex('Male')">Male</button>
+        <input type="hidden" id="sex" name="sex" required>
+      </div>
+
+      <button type="submit" class="start-button" id="start" disabled>Start</button>
+    </form>
+  </div>
+
+  <script>
+    let selectedSex = null;
+
+    function selectSex(sex) {
+      selectedSex = sex;
+      document.getElementById("sex").value = sex;
+
+      // Highlight selected button
+      document.getElementById("female").classList.remove("selected");
+      document.getElementById("male").classList.remove("selected");
+      if (sex === "Female") {
+        document.getElementById("female").classList.add("selected");
+      } else {
+        document.getElementById("male").classList.add("selected");
+      }
+
+      // Enable the Start button
+      document.getElementById("start").disabled = false;
+    }
+  </script>
+</body>
+</html>

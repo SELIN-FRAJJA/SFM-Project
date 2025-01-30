@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Disease Prediction Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='skinstyle.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <h2>Skin Disease Prediction</h2>
+    <div class="chat-box">
+        <div class="upload-box">
+            <p><strong>System:</strong> Please upload an image for skin disease prediction.</p>
+            <form id="uploadForm" action="/predict" method="POST" enctype="multipart/form-data">
+                <div style="display: flex; align-items: center;">
+                    <!-- Single file input -->
+                    <div>
+                        <input type="file" id="fileInput" name="file" accept="image/*" required><br><br>
+                    </div>
+                    <!-- Preview box -->
+                    <div id="imagePreviewBox" style="margin-left: 20px; display: none; text-align: center;">
+                        <p><strong>Image Preview:</strong></p>
+                        <img id="imagePreview" src="#" alt="Selected Image" style="max-width: 150px; max-height: 150px; border: 1px solid #ccc; padding: 5px;">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div id="questionsSection" style="display: none;">
+            <h4><strong>System:</strong> Answer the following questions:</h4>
+
+            <form id="questionsForm">
+                {% for i in range(1, 11) %}
+                    <div class="question" id="q{{ i }}">
+                        <p><strong>Question {{ i }}:</strong> 
+                            {% if i == 1 %} Do you have any history of skin conditions? 
+                            {% elif i == 2 %} Is the infection painful? 
+                            {% elif i == 3 %} Did the infection appear suddenly? 
+                            {% elif i == 4 %} Have you experienced any fever with this infection? 
+                            {% elif i == 5 %} Is the infection spreading quickly? 
+                            {% elif i == 6 %} Have you been exposed to chemicals or irritants recently? 
+                            {% elif i == 7 %} Have you tried any treatments for the infection? 
+                            {% elif i == 8 %} Is the infection itchy? 
+                            {% elif i == 9 %} Is there a visible rash or swelling? 
+                            {% elif i == 10 %} Have you had any recent trauma to the affected area? 
+                            {% endif %}
+                        </p>
+                        <div class="answer-buttons">
+                          <button 
+                              type="button" 
+                              id="q{{ i }}-yes" 
+                              class="option-button" 
+                              onclick="selectButton('q{{ i }}-yes'); recordAnswer('q{{ i }}', 'Yes')">
+                              Yes
+                          </button>
+                          <button 
+                              type="button" 
+                              id="q{{ i }}-no" 
+                              class="option-button" 
+                              onclick="selectButton('q{{ i }}-no'); recordAnswer('q{{ i }}', 'No')">
+                              No
+                          </button>
+                          <button 
+                              type="button" 
+                              id="q{{ i }}-others-btn" 
+                              class="option-button" 
+                              onclick="selectButton('q{{ i }}-others-btn'); showOtherTextBox('q{{ i }}')">
+                              Others
+                          </button>
+                      </div>
+                      <div id="q{{ i }}-others" style="display:none;">
+                          <textarea name="others_answer_{{ i }}" id="q{{ i }}-others-text" placeholder="Please specify..." rows="4" cols="50"></textarea>
+                      </div>
+                        <!-- Hidden input to store the answer -->
+                        <input type="hidden" name="q{{ i }}" id="q{{ i }}-answer" value="">
+                    </div>
+                {% endfor %}
+            </form>
+            <button type="button" id="uploadButton" class="option-button" onclick="submitForm()">Upload and Predict</button>
+        </div>
+    </div>
+</div>
+
+<!-- Transparent Overlay -->
+<div id="overlay" class="overlay">
+    <!-- Result Box -->
+    <div id="resultBox" class="result-box">
+        <h4><strong>System:</strong> Prediction Result:</h4>
+        <p id="predictionResult"></p><br>
+        <h4><strong>System:</strong> Symptoms:</h4>
+        <ul id="symptomsList"></ul>
+        <button id="closeButton" class="close-button" onclick="closeResultBox()">Close</button>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const imagePreviewBox = document.getElementById('imagePreviewBox');
+    const imagePreview = document.getElementById('imagePreview');
+    const questionsSection = document.getElementById('questionsSection');
+    const overlay = document.getElementById('overlay');
+    const resultBox = document.getElementById('resultBox');
+    const predictionResult = document.getElementById('predictionResult');
+    const symptomsList = document.getElementById('symptomsList');
+
+    fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+
+            // Display the preview box
+            imagePreviewBox.style.display = 'block';
+
+            // Load the image into the preview box
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // Show the questions section
+            questionsSection.style.display = 'block';
+        } else {
+            // Hide the preview box if no file is selected
+            imagePreviewBox.style.display = 'none';
+            imagePreview.src = '#';
+            questionsSection.style.display = 'none';
+        }
+    });
+
+    function selectButton(buttonId) {
+        const buttons = document.querySelectorAll(".option-button");
+        buttons.forEach((button) => button.classList.remove("selected"));
+
+        const selectedButton = document.getElementById(buttonId);
+        selectedButton.classList.add("selected");
+    }
+
+    function recordAnswer(questionId, answer) {
+        document.getElementById(`${questionId}-answer`).value = answer;
+        document.getElementById(`${questionId}-others`).style.display = 'none';
+    }
+
+    function showOtherTextBox(questionId) {
+        document.getElementById(`${questionId}-others`).style.display = 'block';
+        document.getElementById(`${questionId}-answer`).value = 'Others';
+    }
+
+    function submitForm() {
+        const formData = new FormData(document.getElementById('uploadForm'));
+        const answers = {};
+
+        // Collect answers from the questions
+        for (let i = 1; i <= 10; i++) {
+            const answer = document.getElementById(`q${i}-answer`).value;
+            if (answer === 'Others') {
+                // Get the text from the "Others" textbox
+                answers[`q${i}`] = document.getElementById(`q${i}-others-text`).value;
+            } else {
+                answers[`q${i}`] = answer;
+            }
+        }
+
+        // Append answers to the form data
+        for (const key in answers) {
+            formData.append(key, answers[key]);
+        }
+
+        // Send the form data to the server
+        fetch('/predict', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Fetch user details from user_data.txt
+            fetch('/get_user_data')
+            .then(response => response.text())
+            .then(userData => {
+                // Display age, sex, and prediction result
+                predictionResult.innerHTML = `<strong>${userData}</strong><br><br>The image class is: <strong>${data.result}</strong>`;
+
+                // Categorize the answers
+                const categorizedAnswers = {
+                    present: [],
+                    absent: [],  
+                    uncertain: []
+                };
+
+                for (let i = 1; i <= 10; i++) {
+                    const questionText = getQuestionText(i);
+                    const answer = answers[`q${i}`];
+
+                    if (answer === 'Yes') {
+                        categorizedAnswers.present.push(questionText);
+                    } else if (answer === 'No') {
+                        categorizedAnswers.absent.push(questionText);
+                    } else {
+                        categorizedAnswers.uncertain.push(questionText);
+                    }
+                }
+
+                // Display the categorized answers
+                symptomsList.innerHTML = '';
+
+                if (categorizedAnswers.present.length > 0) {
+                    const presentHeader = document.createElement('h4');
+                    presentHeader.textContent = 'Reported as present:';
+                    symptomsList.appendChild(presentHeader);
+
+                    const presentList = document.createElement('ul');
+                    categorizedAnswers.present.forEach(symptom => {
+                        const li = document.createElement('li');
+                        li.textContent = symptom;
+                        presentList.appendChild(li);
+                    });
+                    symptomsList.appendChild(presentList);
+                }
+
+                if (categorizedAnswers.absent.length > 0) {
+                    const absentHeader = document.createElement('h4');
+                    absentHeader.textContent = 'Reported as absent:';
+                    symptomsList.appendChild(absentHeader);
+
+                    const absentList = document.createElement('ul');
+                    categorizedAnswers.absent.forEach(symptom => {
+                        const li = document.createElement('li');
+                        li.textContent = symptom;
+                        absentList.appendChild(li);
+                    });
+                    symptomsList.appendChild(absentList);
+                }
+
+                if (categorizedAnswers.uncertain.length > 0) {
+                    const uncertainHeader = document.createElement('h4');
+                    uncertainHeader.textContent = 'Reported as uncertain:';
+                    symptomsList.appendChild(uncertainHeader);
+
+                    const uncertainList = document.createElement('ul');
+                    categorizedAnswers.uncertain.forEach(symptom => {
+                        const li = document.createElement('li');
+                        li.textContent = symptom;
+                        uncertainList.appendChild(li);
+                    });
+                    symptomsList.appendChild(uncertainList);
+                }
+
+                // Show the overlay and result box
+                overlay.style.display = 'flex';
+                resultBox.classList.add('zoom-in');
+            })
+            .catch(error => console.error('Error fetching user data:', error));
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+// Helper function to get the question text based on the question number
+function getQuestionText(questionNumber) {
+    switch (questionNumber) {
+        case 1: return 'History of skin conditions';
+        case 2: return 'Painful infection';
+        case 3: return 'Infection appeared suddenly';
+        case 4: return 'Fever with infection';
+        case 5: return 'Infection spreading quickly';
+        case 6: return 'Exposure to chemicals or irritants';
+        case 7: return 'Tried any treatments';
+        case 8: return 'Itchy infection';
+        case 9: return 'Visible rash or swelling';
+        case 10: return 'Recent trauma to the affected area';
+        default: return '';
+    }
+}
+
+    function closeResultBox() {
+        overlay.style.display = 'none';
+        resultBox.classList.remove('zoom-in');
+    }
+</script>
+</body>
+</html>
