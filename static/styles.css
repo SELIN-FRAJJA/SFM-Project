@@ -1,0 +1,195 @@
+/* General Styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to bottom right, #041422, #2d037c);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 300px;
+}
+
+h1 {
+  color: #333;
+}
+
+label {
+  display: block;
+  margin: 10px 0 5px;
+  font-size: 14px;
+}
+
+input {
+  width: 60%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Button Styles */
+.button-group {
+  margin-top: 10px;
+}
+
+.sex-button,
+.option-button {
+  background-color: transparent;
+  border: 2px solid #bfdafd;
+  color: #002c8a;
+  padding: 10px 15px;
+  margin: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease-in-out;
+}
+
+.sex-button:hover,
+.option-button:hover {
+  background-color: #ddf2ff;
+  color: rgb(0, 0, 0);
+}
+
+.start-button {
+  background-color: #898b9e;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 15px;
+}
+
+.start-button:hover {
+  background-color: #2a2c2e;
+}
+
+.horizontal {
+  display: flex;
+  justify-content: space-between;
+}
+
+.option-button {
+  flex: 1;
+  margin: 5px;
+  padding: 12px 20px;
+}
+
+ /* Style for the icon */
+ #icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background-color: rgb(109, 5, 109);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1000; /* Ensure the icon stays on top */
+}
+
+/* Style for the map section (hidden by default) */
+#map-section {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom right, #041422, #030433);
+  justify-content: center;
+  align-items: center;
+  z-index: 999; /* Ensure it appears below the icon but above other content */
+}
+
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.container {
+  text-align: center;
+}
+
+.button-group.horizontal {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.option-button {
+  padding: 10px 20px;
+  background-color: #898b9e;
+  color: rgb(233, 233, 233);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.option-button:hover {
+  background-color: #2a2c2e;
+}
+
+/* Map section styles */
+.map-content {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+  max-width: 80%;
+  width: 100%;
+}
+
+.map-content h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.map-content p {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.map-content iframe {
+  width: 100%;
+  height: 500px;
+  border: none;
+  border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+  .map-content iframe {
+    height: 300px;
+  }
+}
+
+
+
+
